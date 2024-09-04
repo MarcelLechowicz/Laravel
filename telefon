@@ -1,0 +1,185 @@
+#include "iostream"
+#include "cassert"
+
+using namespace std;
+
+constexpr size_t ROZMIAR = 100;
+using tekst = char[ROZMIAR];
+
+enum class Stan {
+	wlaczony, wylaczony, zablokowany
+};
+
+class Operator {
+protected:
+	tekst m_nazwa;
+public:
+	void setNazwa(const char* i_nazwa) {
+		strncpy_s(m_nazwa, i_nazwa, ROZMIAR);
+	}
+	const char* getNazwa() {
+		return m_nazwa;
+	}
+	Operator(const char* i_nazwa)
+	{
+		setNazwa(i_nazwa);
+	}
+
+};
+
+class Telefon {
+protected:
+	char m_numer[12]; // FORMAT XXX-XXX-XXX
+	int m_stanBaterii;
+	Stan m_stan;
+	Operator* m_operator;
+	const int m_pin;
+
+	static int licznikZablokowanych;
+public:
+	static int getLicznikZablokowanych() {
+		return licznikZablokowanych;
+	}
+
+	void setNumer(const char* i_numer) {
+		if (strlen(i_numer) != 11 || i_numer[3] != '-' || i_numer[7] != '-') {
+			throw invalid_argument("Blad");
+		}
+		strncpy_s(m_numer, i_numer, 11);
+		m_numer[11] = '\0';
+	}
+	void setStanBaterii(int i_stanBaterii) {
+		if (i_stanBaterii < 0 || i_stanBaterii > 100) {
+			throw out_of_range("Poza zakresem stanu baterii");
+		}
+		m_stanBaterii = i_stanBaterii;
+		if (m_stanBaterii == 0) {
+			m_stan = Stan::wylaczony;
+		}
+	}
+	void setStan(Stan i_stan, int pin = -1) {
+		if (m_stan == Stan::zablokowany && i_stan != Stan::zablokowany) {
+			if (pin != m_pin) {
+				throw invalid_argument("Bledny pin");
+			}
+			licznikZablokowanych--;
+
+		}
+		else if (m_stan != Stan::zablokowany && i_stan != Stan::zablokowany) {
+			licznikZablokowanych++;
+		}
+		m_stan = i_stan;
+	}
+	void setAutor(Operator* i_operator) {
+		if (i_operator == nullptr) {
+			throw invalid_argument("Blad");
+		}
+		m_operator = i_operator;
+	}
+	const int getPin() const{
+		return m_pin;
+	}
+
+	const char* getNumer() {
+		return m_numer;
+	}
+
+	int getStanBaterii() const {
+		return m_stanBaterii;
+	}
+
+	Stan getStan() const {
+		return m_stan;
+	}
+
+	Operator* getOperator() {
+		return m_operator;
+	}
+
+	virtual double funkcjonalnosc() {
+		return 20 * (m_stanBaterii / 100.0);
+	}
+
+	Telefon(const char* i_numer, int i_stanBaterii, Stan i_stan, Operator* i_operator, const int pin)
+		:m_operator(i_operator), m_pin(pin)
+	{
+		assert(i_stan != Stan::zablokowany);
+		setNumer(i_numer);
+		setStanBaterii(i_stanBaterii);
+		setStan(i_stan);
+	}
+	~Telefon() {
+		if (m_stan == Stan::zablokowany) {
+			licznikZablokowanych--;
+		}
+	}
+
+	Telefon& operator+=(int procent) {
+		int nowyStanBaterii = m_stanBaterii + procent;
+		setStanBaterii(nowyStanBaterii);
+		return *this;
+	}
+	
+};
+
+
+struct SystemOperacyjny {
+	tekst nazwa;
+	double kosztObliczeniowy;
+};
+
+class Smartfon :public Telefon {
+private:
+	SystemOperacyjny m_system;
+public:
+	Smartfon(const char* i_numer, int i_stanBaterii, Stan i_stan, Operator* i_operator, const int pin, SystemOperacyjny system)
+		:Telefon(i_numer, i_stanBaterii, i_stan, i_operator, pin), m_system(system)
+	{
+		if (m_system.kosztObliczeniowy < 0.0 || m_system.kosztObliczeniowy>1.0) {
+			throw invalid_argument("Poza zakresem");
+		}
+	}
+	void setSystem(SystemOperacyjny system) {
+		m_system = system;
+	}
+	SystemOperacyjny getSystem() const{
+		return m_system;
+	}
+
+	virtual double funkcjonalnosc() override {
+		return 20 - (10 * m_system.kosztObliczeniowy * m_stanBaterii/100.0);
+	}
+
+};
+
+Smartfon telToSmart(SystemOperacyjny system, Telefon& t) {
+	const char* numer = t.getNumer();
+	int stanBaterii = t.getStanBaterii();
+	Stan stan = t.getStan();
+	Operator* operatorTel = t.getOperator();
+	int pin = t.getPin();
+	
+
+	Smartfon smart(numer, stanBaterii, stan, operatorTel, pin, system);
+	return smart;
+}
+
+int Telefon::licznikZablokowanych = 0;
+
+
+int main() {
+	Operator play("play");
+
+	Telefon t1("123-345-678", 50, Stan::wlaczony, &play, 1234);
+
+	cout << "Stan bateri aktualny: " << t1.getStanBaterii() << endl;
+	t1 += 30;
+	cout << "Stan bateri po naladowaniu +30: " << t1.getStanBaterii() << endl;
+	t1 += -10;
+	cout << "Stan bateri po rozladowaniu -10: " << t1.getStanBaterii() << endl;
+	t1 += -70;
+	cout << "Stan bateri: " << t1.getStanBaterii() << endl;
+	cout << "Stan telfonu: " << static_cast<int>(t1.getStan()) << endl;
+
+
+}
