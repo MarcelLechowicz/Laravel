@@ -1,0 +1,168 @@
+#include <iostream>
+#include <cassert>
+
+using namespace std;
+
+constexpr size_t ROZMIAR = 100;
+using tekst = char[ROZMIAR];
+enum class Dostepnosc {
+	dostepna, niedostepna
+};
+
+class Autor {
+protected:
+	tekst m_nazwisko;
+public:
+	void setNazwisko(const char* i_nazwisko) {
+		strncpy_s(m_nazwisko, i_nazwisko, ROZMIAR);
+	}
+	Autor(const char* nazwisko) {
+		setNazwisko(nazwisko);
+	}
+
+	const char* getNazwisko() const {
+		return m_nazwisko;
+	}
+};
+
+class Ksiazka {
+protected:
+	tekst m_tytul;
+	size_t m_liczbaStron;
+	Dostepnosc m_dostepnosc;
+	Autor* m_autor;
+
+	static Ksiazka* instancjaWzorcowa;
+public:
+
+	void setTytul(const char* i_tytul) {
+		strncpy_s(m_tytul, i_tytul, ROZMIAR);
+	}
+	void setLiczbaStron(size_t i_liczbaStron) {
+		m_liczbaStron = (i_liczbaStron > 1 ? i_liczbaStron : 1);
+	}
+	void setDostepnosc(Dostepnosc i_dostepnosc){
+		m_dostepnosc = i_dostepnosc;
+	}
+	void setAutor(Autor* autor) {
+		if (autor != nullptr) {
+			m_autor = autor;
+		}
+		else throw invalid_argument("Blad");
+	}
+
+	const char* getTytul() const{
+		return m_tytul;
+	}
+	size_t getLiczbaStron() const{
+		return m_liczbaStron;
+	}
+	Dostepnosc getDostepnosc() const{
+		return m_dostepnosc;
+	}
+	Autor* getAutor() {
+		return m_autor;
+	}
+	
+	Ksiazka (const char* tytul, size_t liczbaStron, Dostepnosc dostepnosc, Autor* autor)
+		:m_autor(autor)
+	{
+		setTytul(tytul);
+		setLiczbaStron(liczbaStron);
+		setDostepnosc(dostepnosc);
+	}
+	static void ustawWzorcowa(Ksiazka* instacjaW) {
+		instancjaWzorcowa = instacjaW;
+	}
+	Ksiazka()
+	{
+		assert(instancjaWzorcowa != nullptr);
+		setAutor(instancjaWzorcowa->getAutor());
+		setTytul(instancjaWzorcowa->getTytul());
+		setLiczbaStron(instancjaWzorcowa->getLiczbaStron());
+		setDostepnosc(instancjaWzorcowa->getDostepnosc());
+	}
+	virtual double CenaKsiazki() const {
+		return static_cast<double>(m_liczbaStron);
+		//cena jest rowna liczbie stron bo 1PLN*liczbastron=liczbastron
+	}
+
+	operator const char* () {
+		static char opis[ROZMIAR * 2];
+
+		const char* dostepnosc = (m_dostepnosc == Dostepnosc::dostepna) ? "Dostepna" : "Niedostepna";
+		snprintf(opis, ROZMIAR * 2, "Tytul: %s, Autor: %s, Liczba Stron: %zu, Dostepnosc: %s",
+			m_tytul, m_autor->getNazwisko(), m_liczbaStron, dostepnosc);
+
+		return opis;
+	}
+	
+	bool operator==(const Ksiazka& z) const {
+		if (this->getLiczbaStron() == z.getLiczbaStron() && this->m_autor->getNazwisko() == z.m_autor->getNazwisko() &&
+			this->getDostepnosc() == z.getDostepnosc()) {
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
+class Ebook:public Ksiazka {
+protected:
+	double m_MB;
+public:
+	void setMB(double m) {
+		m_MB = (m > 0 ? m : 1);
+	}
+	double getMB() const {
+		return m_MB;
+	}
+
+	Ebook(const char* tytul, size_t liczbaStron, Dostepnosc dostepnosc, Autor* autor, double m)
+		:Ksiazka(tytul, liczbaStron, dostepnosc, autor)
+	{
+		setMB(m);
+	}
+
+	virtual double CenaKsiazki() const override {
+		double cena = 0;
+		cena = m_liczbaStron * 0.75;
+		return cena;
+	}
+};
+
+Ksiazka* Ksiazka::instancjaWzorcowa = nullptr;
+
+int main() {
+	try {
+		Autor a1("Nowak"), a2("Kowal"), a3("Smith");
+		Autor* autorzy[3] = { &a1,&a2,&a3 };
+
+
+		Ksiazka k1("Pan Tadeusz", 50, Dostepnosc::dostepna, autorzy[1]);
+		Ksiazka k2("Pan", 230, Dostepnosc::niedostepna, autorzy[2]);
+		Ksiazka k3("Tadeusz", 50, Dostepnosc::dostepna, autorzy[1]);
+
+		Ksiazka::ustawWzorcowa(&k1);
+
+		const char* opis = static_cast<const char*>(k1); \
+
+			cout << opis << endl;
+
+		if (k1 == k2) {
+			cout << "Ksiazki sa takie same! (umownie)\n";
+		}
+		else {
+			cout << "Ksiazki sa rozne!\n";
+		}
+
+		if (k1 == k3) {
+			cout << "Ksiazki sa takie same! (umownie)\n";
+		}
+		else {
+			cout << "Ksiazki sa rozne!\n";
+		}
+	}
+	catch (invalid_argument) {
+		cout << "Blad!\n";
+	}
