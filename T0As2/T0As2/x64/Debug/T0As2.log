@@ -1,0 +1,4 @@
+﻿  funkcje.cpp
+C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As2\T0As2\funkcje.cpp(18): warning C4715: "Alokacja”: niewszystkie ścieżki kodu zwracają wartość
+C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As2\T0As2\funkcje.cpp(59): warning C4715: "OdczytzPliku”: niewszystkie ścieżki kodu zwracają wartość
+  T0As2.vcxproj -> C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As2\x64\Debug\T0As2.exe
