@@ -1,0 +1,6 @@
+﻿  T0As5.cpp
+C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As5\T0As5\T0As5.cpp(50,25): warning C4477: „fscanf”: ciąg formatu „%d” wymaga argumentu typu „int *”, ale argument 1 ze zmienną liczbą argumentów ma typ „short *”
+C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As5\T0As5\T0As5.cpp(50,25): message : rozważ użycie elementu „%hd” w ciągu formatu
+C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As5\T0As5\T0As5.cpp(56): warning C4715: "OdczytZpliku”: niewszystkie ścieżki kodu zwracają wartość
+C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As5\T0As5\T0As5.cpp(24): warning C4715: "Alokacja”: niewszystkie ścieżki kodu zwracają wartość
+  T0As5.vcxproj -> C:\Users\Adikson\Desktop\ProgramowanieWrzesien\T0As5\x64\Debug\T0As5.exe
