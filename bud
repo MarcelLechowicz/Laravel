@@ -1,0 +1,128 @@
+#include <iostream>
+#include <cassert>
+#include <cmath>
+
+enum class rodzaj {
+    prywatny, publiczny
+};
+
+class Miejscowosc {
+    // Pusta klasa zgodnie z wymaganiami.
+};
+
+class Budynek {
+    double powierzchnia;
+    rodzaj rodzaj_budynku;
+    Miejscowosc* miejscowosc;
+
+    static int licznik_prywatnych;
+    static int licznik_publicznych;
+
+public:
+    Budynek(double powierzchnia, rodzaj rodzaj_budynku, Miejscowosc* miejscowosc) {
+        set_powierzchnia(powierzchnia);
+        set_rodzaj(rodzaj_budynku);
+        set_miejscowosc(miejscowosc);
+    }
+
+    ~Budynek() {
+        delete miejscowosc;
+        if (rodzaj_budynku == rodzaj::prywatny) {
+            licznik_prywatnych--;
+        } else {
+            licznik_publicznych--;
+        }
+    }
+
+    void set_powierzchnia(double powierzchnia) {
+        assert(powierzchnia >= 10);  // Upewniamy się, że powierzchnia nie jest mniejsza niż 10 m²
+        this->powierzchnia = powierzchnia;
+    }
+
+    void set_rodzaj(rodzaj rodzaj_budynku) {
+        this->rodzaj_budynku = rodzaj_budynku;
+        if (rodzaj_budynku == rodzaj::prywatny) {
+            licznik_prywatnych++;
+        } else {
+            licznik_publicznych++;
+        }
+    }
+
+    void set_miejscowosc(Miejscowosc* miejscowosc) {
+        this->miejscowosc = miejscowosc;
+    }
+
+    double get_powierzchnia() const {
+        return powierzchnia;
+    }
+
+    rodzaj get_rodzaj() const {
+        return rodzaj_budynku;
+    }
+
+    Miejscowosc* get_miejscowosc() const {
+        return miejscowosc;
+    }
+
+    virtual double podatek() {
+        return 10 * get_powierzchnia();
+    }
+
+    bool operator==(const Budynek& budynek) const {
+        return (powierzchnia == budynek.powierzchnia && 
+                rodzaj_budynku == budynek.rodzaj_budynku && 
+                miejscowosc == budynek.miejscowosc);
+    }
+
+    static int get_licznik_prywatnych() {
+        return licznik_prywatnych;
+    }
+
+    static int get_licznik_publicznych() {
+        return licznik_publicznych;
+    }
+};
+
+int Budynek::licznik_prywatnych = 0;
+int Budynek::licznik_publicznych = 0;
+
+class Posiadlosc : public Budynek {
+    double dzialka;
+
+public:
+    Posiadlosc(double dzialka, double powierzchnia, rodzaj rodzaj_budynku, Miejscowosc* miejscowosc) 
+        : Budynek(powierzchnia, rodzaj_budynku, miejscowosc) {
+        set_dzialka(dzialka);
+    }
+
+    void set_dzialka(double dzialka) {
+        assert(dzialka > 0);
+        this->dzialka = dzialka;
+    }
+
+    double get_dzialka() const {
+        return dzialka;
+    }
+
+    operator double() const {
+        return abs(get_dzialka() - Budynek::get_powierzchnia());
+    }
+
+    double podatek() override {
+        return 20 * get_dzialka() + Budynek::podatek();
+    }
+};
+
+int main() {
+    Miejscowosc* m = new Miejscowosc();
+    Budynek b1(20, rodzaj::prywatny, m);
+    Posiadlosc p1(50, 30, rodzaj::prywatny, m);
+
+    std::cout << "Podatek budynku: " << b1.podatek() << " PLN\n";
+    std::cout << "Podatek posiadlosci: " << p1.podatek() << " PLN\n";
+    std::cout << "Liczba budynkow prywatnych: " << Budynek::get_licznik_prywatnych() << "\n";
+    std::cout << "Liczba budynkow publicznych: " << Budynek::get_licznik_publicznych() << "\n";
+
+    delete m;
+    return 0;
+}
